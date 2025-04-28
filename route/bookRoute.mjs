@@ -1,4 +1,4 @@
-// filepath: e:\BOOKS_Express\route\bookRoute.mjs
+
 import express from 'express';
 import {
     addBook,
@@ -18,12 +18,12 @@ import {
 
 const router = express.Router();
 
-// Публичные маршруты (для чтения информации)
+
 router.get('/:id', getBook);
 router.get('/', [...paginationValidator, ...searchValidator], getAllBooksList);
 router.get('/author/:authorId', paginationValidator, getAuthorBooksList);
 
-// Защищенные маршруты (требуют аутентификации и роли админа)
+
 router.post('/', [authenticateJWT, adminOnly, ...bookValidator], addBook);
 router.patch('/:id', [authenticateJWT, adminOnly, ...bookUpdateValidator], updateBookInfo);
 router.delete('/:id', [authenticateJWT, adminOnly], removeBook);
