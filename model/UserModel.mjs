@@ -11,10 +11,10 @@ export const createUser = async (userData) => {
         
         // Įterpti naują vartotoją į duomenų bazę
         const result = await query(
-            `INSERT INTO users (name, email, password, role) 
+            `INSERT INTO users (username, email, password, role) 
              VALUES ($1, $2, $3, $4) 
-             RETURNING id, name, email, role, created_at`,
-            [userData.name, userData.email, hashedPassword, userData.role || 'user']
+             RETURNING id, username, email, role, created_at`,
+            [userData.username, userData.email, hashedPassword, userData.role || 'user']
         );
         
         return result.rows[0];
@@ -28,7 +28,7 @@ export const createUser = async (userData) => {
 export const getUserById = async (userId) => {
     try {
         const result = await query(
-            `SELECT id, name, email, role, created_at 
+            `SELECT id, username, email, role, created_at 
              FROM users 
              WHERE id = $1`,
             [userId]
@@ -45,7 +45,7 @@ export const getUserById = async (userId) => {
 export const getUserByEmail = async (email) => {
     try {
         const result = await query(
-            `SELECT id, name, email, password, role, created_at 
+            `SELECT id, username, email, password, role, created_at 
              FROM users 
              WHERE email = $1`,
             [email]
@@ -66,8 +66,13 @@ export const updateUser = async (userId, userData) => {
         const values = [];
         let paramCount = 1;
         
-        if (userData.name) {
-            updates.push(`name = $${paramCount}`);
+        if (userData.username) {
+            updates.push(`username = $${paramCount}`);
+            values.push(userData.username);
+            paramCount++;
+        } else if (userData.name) {
+            // Для обратной совместимости также обрабатываем поле name
+            updates.push(`username = $${paramCount}`);
             values.push(userData.name);
             paramCount++;
         }
@@ -104,7 +109,7 @@ export const updateUser = async (userId, userData) => {
             `UPDATE users 
              SET ${updates.join(', ')} 
              WHERE id = $${paramCount} 
-             RETURNING id, name, email, role, created_at`,
+             RETURNING id, username, email, role, created_at`,
             values
         );
         
@@ -121,7 +126,7 @@ export const deleteUser = async (userId) => {
         const result = await query(
             `DELETE FROM users 
              WHERE id = $1 
-             RETURNING id, name, email, role, created_at`,
+             RETURNING id, username, email, role, created_at`,
             [userId]
         );
         
@@ -138,7 +143,7 @@ export const getAllUsers = async (page = 1, limit = 10) => {
         const offset = (page - 1) * limit;
         
         const result = await query(
-            `SELECT id, name, email, role, created_at 
+            `SELECT id, username, email, role, created_at 
              FROM users 
              ORDER BY created_at DESC 
              LIMIT $1 OFFSET $2`,

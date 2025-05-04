@@ -15,7 +15,7 @@ import { validationResult } from 'express-validator';
 // Registruoti naują vartotoją
 export const register = async (req, res) => {
     try {
-        console.log('Registration request body:', req.body); // Отладочный вывод
+        console.log('Registration request body:', req.body); // Derinimo išvestis
         
         // Tikrinti validacijos klaidas
         const errors = validationResult(req);
@@ -29,7 +29,7 @@ export const register = async (req, res) => {
 
         const { username, email, password, role } = req.body;
         
-        // Проверка наличия обязательных полей
+        // Privalomų laukų tikrinimas
         if (!username || !email || !password) {
             return res.status(400).json({
                 success: false,
@@ -47,7 +47,8 @@ export const register = async (req, res) => {
         }
         
         // Sukurti naują vartotoją (rolė pagal nutylėjimą yra 'user', jei nenurodyta)
-        const userData = { name: username, email, password, role };
+        // Передаем username напрямую вместо использования поля name
+        const userData = { username, email, password, role };
         const newUser = await createUser(userData);
         
         // Sugeneruoti JWT žetoną
@@ -116,11 +117,18 @@ export const login = async (req, res) => {
         
         // Grąžinti vartotojo duomenis (be slaptažodžio) ir žetoną
         const { password: _, ...userWithoutPassword } = user;
+        
+        // Добавляем поле name для обратной совместимости
+        const adaptedUser = {
+            ...userWithoutPassword,
+            name: user.username
+        };
+        
         res.status(200).json({
             success: true,
             message: 'PRISIJUNGIMAS SEKMINGAS!!!!',
             data: {
-                user: userWithoutPassword,
+                user: adaptedUser,
                 token
             }
         });
@@ -147,9 +155,15 @@ export const getUserProfile = async (req, res) => {
             });
         }
         
+      
+        const adaptedUser = {
+            ...user,
+            name: user.username 
+        };
+        
         res.status(200).json({
             success: true,
-            data: user
+            data: adaptedUser
         });
     } catch (error) {
         logError('Klaida gaunant vartotojo profilį', error.stack);
@@ -190,10 +204,16 @@ export const updateUserProfile = async (req, res) => {
         // Atnaujinti vartotoją
         const updatedUser = await updateUser(userId, updateData);
         
+      
+        const adaptedUser = {
+            ...updatedUser,
+            name: updatedUser.username
+        };
+        
         res.status(200).json({
             success: true,
             message: 'Vartotojas sekmingai atnaujintas ',
-            data: updatedUser
+            data: adaptedUser
         });
     } catch (error) {
         logError('Klaida atnaujinant vartotojo profilį', error.stack);
@@ -244,16 +264,68 @@ export const getAllUsersList = async (req, res) => {
         
         const usersData = await getAllUsers(page, limit);
         
+        // Добавляем поле name для обратной совместимости для каждого пользователя
+        const adaptedUsersData = {
+            ...usersData,
+            users: usersData.users.map(user => ({
+                ...user,
+                name: user.username // Добавляем поле name со значением из username
+            }))
+        };
+        
         res.status(200).json({
             success: true,
             message: 'Vartotojai sėkmingai gauti',
-            data: usersData
+            data: adaptedUsersData
         });
     } catch (error) {
         logError('Klaida gaunant vartotojų sąrašą', error.stack);
         res.status(500).json({
             success: false,
             message: 'Nepavyko gauti vartotojų',
+            error: error.message
+        });
+    }
+};
+
+// Gauti vartotojo duomenis pagal el. paštą
+export const getUserByEmailAddress = async (req, res) => {
+    try {
+        const { email } = req.params;
+        
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                message: 'El. pašto adresas yra privalomas'
+            });
+        }
+        
+        const user = await getUserByEmail(email);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'Vartotojas su tokiu el. paštu nerastas'
+            });
+        }
+        
+        // Pašaliname slaptažodžio lauką prieš grąžinant duomenis
+        const { password: _, ...userWithoutPassword } = user;
+        
+        // Pridedame name lauką suderinamumui
+        const adaptedUser = {
+            ...userWithoutPassword,
+            name: user.username
+        };
+        
+        res.status(200).json({
+            success: true,
+            data: adaptedUser
+        });
+    } catch (error) {
+        logError('Klaida gaunant vartotoją pagal el. paštą', error.stack);
+        res.status(500).json({
+            success: false,
+            message: 'Nepavyko gauti vartotojo duomenų',
             error: error.message
         });
     }

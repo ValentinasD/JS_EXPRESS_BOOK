@@ -4,32 +4,32 @@ import { body, param, query } from 'express-validator';
 // User validators
 export const registerValidator = [
     body('username')
-        .isString().withMessage('Username должен быть строкой')
-        .notEmpty().withMessage('Username обязателен')
-        .isLength({ min: 3 }).withMessage('Username должен содержать не менее 3 символов'),
+        .isString().withMessage('Vartotojo vardas turi būti tekstas')
+        .notEmpty().withMessage('Vartotojo vardas yra privalomas')
+        .isLength({ min: 3 }).withMessage('Vartotojo vardas turi būti bent 3 simbolių ilgio'),
     
     body('email')
-        .isEmail().withMessage('Введите корректный email')
-        .notEmpty().withMessage('Email обязателен'),
+        .isEmail().withMessage('Įveskite teisingą el. pašto adresą')
+        .notEmpty().withMessage('El. paštas yra privalomas'),
     
     body('password')
-        .isString().withMessage('Пароль должен быть строкой')
-        .notEmpty().withMessage('Пароль обязателен')
-        .isLength({ min: 6 }).withMessage('Пароль должен содержать не менее 6 символов'),
+        .isString().withMessage('Slaptažodis turi būti tekstas')
+        .notEmpty().withMessage('Slaptažodis yra privalomas')
+        .isLength({ min: 6 }).withMessage('Slaptažodis turi būti bent 6 simbolių ilgio'),
     
     body('role')
         .optional()
-        .isIn(['user', 'admin']).withMessage('Роль должна быть "user" или "admin"')
+        .isIn(['user', 'admin']).withMessage('Rolė turi būti "user" arba "admin"')
 ];
 
 export const loginValidator = [
     body('email')
-        .isEmail().withMessage('Введите корректный email')
-        .notEmpty().withMessage('Email обязателен'),
+        .isEmail().withMessage('Įveskite teisingą el. pašto adresą')
+        .notEmpty().withMessage('El. paštas yra privalomas'),
     
     body('password')
-        .isString().withMessage('Пароль должен быть строкой')
-        .notEmpty().withMessage('Пароль обязателен')
+        .isString().withMessage('Slaptažodis turi būti tekstas')
+        .notEmpty().withMessage('Slaptažodis yra privalomas')
 ];
 
 // Author validators

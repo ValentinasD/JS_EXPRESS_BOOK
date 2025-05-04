@@ -47,26 +47,12 @@ export const query = async (text, params) => {
   const start = Date.now();
   try {
     const res = await pool.query(text, params);
-    const duration = Date.now() - start;
-    
-    // logDB('užklausa', {
-    logDB({
-      query: text,
-      params,
-      duration,
-      rows: res.rowCount,
-      message: `užklausa įvykdyta per ${duration}ms`
-    });
+
     
     return res;
   } catch (error) {
     const duration = Date.now() - start;
-    logError({
-      query: text,
-      params,
-      duration,
-      message: 'klaida neįvykdyta užklausa',
-    }, error.stack);
+    logError('Ошибка выполнения запроса к базе данных', error.stack);
     
     throw error;
   }
